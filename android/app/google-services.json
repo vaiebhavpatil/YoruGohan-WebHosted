@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "360774236322",
+    "project_id": "hostel-night-mess",
+    "storage_bucket": "hostel-night-mess.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:360774236322:android:5241cae08081e0f8b23ffb",
+        "android_client_info": {
+          "package_name": "com.example.yorugohan"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "360774236322-79amcbsebqkae2gp2liee9rpjpnf5vbq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPGImbZUrjkBlOeHtiZ7IghmQUpXt9eR8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "360774236322-79amcbsebqkae2gp2liee9rpjpnf5vbq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "360774236322-ipqjrmqgnfumn43ids26rpbp7imb3rqi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.hostelNightMessApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
