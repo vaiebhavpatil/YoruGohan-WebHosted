@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'auth_service.dart'; // Import the AuthService class for Google Sign-In
+import 'auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,8 +14,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isSignUp = false;
-
-  // Flag to track Google sign-in progress
   bool _isGoogleSignInInProgress = false;
 
   // Method to validate email format
@@ -23,39 +22,51 @@ class _LoginScreenState extends State<LoginScreen> {
         .hasMatch(email);
   }
 
+  // Function to handle navigation based on the role
+  void _navigateBasedOnRole(String role) {
+    if (role == 'worker') {
+      Navigator.pushReplacementNamed(context, '/kitchen');
+    } else {
+      Navigator.pushReplacementNamed(context, '/order');
+    }
+  }
+
   // Sign in with email and password
   Future<void> signIn(String email, String password) async {
     try {
       if (!_isEmailValid(email)) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("Please enter a valid email."),
-          ));
-        }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Please enter a valid email."),
+        ));
         return;
       }
-      UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      if (mounted) {
-        Navigator.pushReplacementNamed(
-            context, '/order'); // Navigate to Order Screen
+
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      // Retrieve user data from Firestore
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({
+          'email': email,
+          'name': userCredential.user!.displayName ?? 'Unknown',
+          'role': 'user',
+        });
       }
+
+      String role = userDoc['role'] ?? 'user';
+      _navigateBasedOnRole(role);
     } catch (e) {
-      print("Error: $e");
-      if (mounted) {
-        if (e is FirebaseAuthException) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("Firebase error: ${e.message}"),
-          ));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("An unexpected error occurred. Please try again."),
-          ));
-        }
-      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Error: $e"),
+      ));
     }
   }
 
@@ -63,43 +74,41 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> signUp(String email, String password) async {
     try {
       if (!_isEmailValid(email)) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("Please enter a valid email."),
-          ));
-        }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Please enter a valid email."),
+        ));
         return;
       }
+
       if (password.length < 6) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("Password must be at least 6 characters long."),
-          ));
-        }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Password must be at least 6 characters long."),
+        ));
         return;
       }
+
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      if (mounted) {
-        Navigator.pushReplacementNamed(
-            context, '/order'); // Navigate to Order Screen
-      }
+
+      // Navigate based on role after sign-up
+      String role = 'user'; // default role for new users
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set({
+        'email': email,
+        'name': userCredential.user!.displayName ?? 'Unknown',
+        'role': role,
+      });
+
+      _navigateBasedOnRole(role);
     } catch (e) {
-      print("Error: $e");
-      if (mounted) {
-        if (e is FirebaseAuthException) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("Firebase error: ${e.message}"),
-          ));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("An unexpected error occurred. Please try again."),
-          ));
-        }
-      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Error: $e"),
+      ));
     }
   }
 
@@ -112,25 +121,33 @@ class _LoginScreenState extends State<LoginScreen> {
 
       User? user = await AuthService().signInWithGoogle();
       if (user != null) {
-        // Check if widget is still mounted before using context
-        if (mounted) {
-          Navigator.pushReplacementNamed(
-              context, '/order'); // Navigate to Order Screen
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (!userDoc.exists) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .set({
+            'email': user.email ?? '',
+            'name': user.displayName ?? 'Unknown',
+            'role': 'user',
+          });
         }
+
+        String role = userDoc['role'] ?? 'user';
+        _navigateBasedOnRole(role);
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("Google sign-in failed. Please try again."),
-          ));
-        }
-      }
-    } catch (e) {
-      print("Error: $e");
-      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Error signing in with Google: $e"),
+          content: Text("Google sign-in failed. Please try again."),
         ));
       }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Error signing in with Google: $e"),
+      ));
     } finally {
       setState(() {
         _isGoogleSignInInProgress = false;
@@ -166,9 +183,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 String password = _passwordController.text.trim();
                 if (email.isNotEmpty && password.isNotEmpty) {
                   if (_isSignUp) {
-                    signUp(email, password); // Sign up if _isSignUp is true
+                    signUp(email, password);
                   } else {
-                    signIn(email, password); // Log in if _isSignUp is false
+                    signIn(email, password);
                   }
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -179,7 +196,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Text(_isSignUp ? 'Sign Up' : 'Log In'),
             ),
             SizedBox(height: 10),
-            // Google Sign-In Button
             ElevatedButton(
               onPressed: _isGoogleSignInInProgress ? null : signInWithGoogle,
               child: _isGoogleSignInInProgress
@@ -187,11 +203,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   : Text('Sign in with Google'),
             ),
             SizedBox(height: 10),
-            // Toggle between login and sign-up
             TextButton(
               onPressed: () {
                 setState(() {
-                  _isSignUp = !_isSignUp; // Toggle the form
+                  _isSignUp = !_isSignUp;
                 });
               },
               child: Text(_isSignUp

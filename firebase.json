@@ -1,1 +1,39 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"hostel-night-mess","appId":"1:360774236322:android:5241cae08081e0f8b23ffb","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"hostel-night-mess","configurations":{"android":"1:360774236322:android:5241cae08081e0f8b23ffb","ios":"1:360774236322:ios:4a30fb3d5ca284f7b23ffb","macos":"1:360774236322:ios:4a30fb3d5ca284f7b23ffb","web":"1:360774236322:web:94b1a323f2737b78b23ffb","windows":"1:360774236322:web:b8fb31aa9fe08d44b23ffb"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "hostel-night-mess",
+          "appId": "1:360774236322:android:5241cae08081e0f8b23ffb",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "hostel-night-mess",
+          "configurations": {
+            "android": "1:360774236322:android:5241cae08081e0f8b23ffb",
+            "ios": "1:360774236322:ios:4a30fb3d5ca284f7b23ffb",
+            "macos": "1:360774236322:ios:4a30fb3d5ca284f7b23ffb",
+            "web": "1:360774236322:web:94b1a323f2737b78b23ffb",
+            "windows": "1:360774236322:web:b8fb31aa9fe08d44b23ffb"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

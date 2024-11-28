@@ -4,8 +4,10 @@ import 'package:intl/intl.dart'; // Import the intl package for date formatting
 
 class ModifyOrderScreen extends StatelessWidget {
   final String userId;
+  final String orderId;
 
-  ModifyOrderScreen({required this.userId});
+  // Constructor to accept both userId and orderId
+  ModifyOrderScreen({required this.userId, required this.orderId});
 
   @override
   Widget build(BuildContext context) {
@@ -14,10 +16,11 @@ class ModifyOrderScreen extends StatelessWidget {
         title: const Text('Modify Orders'),
       ),
       body: StreamBuilder(
+        // Fetch orders for the specific user and orderId
         stream: FirebaseFirestore.instance
             .collection('orders')
             .where('user_id', isEqualTo: userId)
-            .orderBy('timestamp', descending: true)
+            .where('orderId', isEqualTo: orderId)
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -26,29 +29,41 @@ class ModifyOrderScreen extends StatelessWidget {
 
           if (snapshot.hasError) {
             return Center(
-                child: Text('Error loading orders: ${snapshot.error}'));
+                child: Text('Error loading order: ${snapshot.error}'));
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('No orders to modify.'));
+            return const Center(child: Text('No order found.'));
           }
 
-          final orders = snapshot.data!.docs;
+          final order =
+              snapshot.data!.docs.first; // Only one order based on orderId
+
+          String orderStatus =
+              order['status'] ?? 'pending'; // Default to 'pending'
+          Timestamp timestamp = order['timestamp'];
+          List items = order['items'] ?? [];
+
+          // Format the timestamp into a human-readable date and time format
+          String formattedDate =
+              DateFormat('dd-MM-yyyy hh:mm a').format(timestamp.toDate());
 
           return ListView(
-            children: orders.map((order) {
-              String orderStatus =
-                  order['status'] ?? 'pending'; // Default to 'pending'
-              Timestamp timestamp = order['timestamp'];
-
-              // Format the timestamp into a human-readable date and time format
-              String formattedDate =
-                  DateFormat('dd-MM-yyyy hh:mm a').format(timestamp.toDate());
-
-              return ListTile(
-                title: Text(order['order'] ?? 'No Order Name'),
-                subtitle: Text(
-                  'Quantity: ${order['quantity']}\nStatus: $orderStatus\nOrdered on: $formattedDate',
+            children: [
+              ListTile(
+                title: Text('Order ID: $orderId'),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Display items in the order
+                    for (var item in items)
+                      Text(
+                        '${item['item']} - ${item['quantity']} x ${item['price']}',
+                      ),
+                    Text('Total Price: ${order['totalPrice']}'),
+                    Text('Status: $orderStatus'),
+                    Text('Ordered on: $formattedDate'),
+                  ],
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -59,8 +74,7 @@ class ModifyOrderScreen extends StatelessWidget {
                       onPressed: orderStatus == 'pending'
                           ? () {
                               // Edit quantity functionality here
-                              _editQuantity(
-                                  context, order.id, order['quantity']);
+                              _editQuantity(context, order.id, items);
                             }
                           : null, // Disable button if not pending
                     ),
@@ -76,8 +90,8 @@ class ModifyOrderScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-              );
-            }).toList(),
+              ),
+            ],
           );
         },
       ),
@@ -85,43 +99,35 @@ class ModifyOrderScreen extends StatelessWidget {
   }
 
   // Function to edit quantity
-  void _editQuantity(
-      BuildContext context, String orderId, int currentQuantity) {
-    TextEditingController controller =
-        TextEditingController(text: currentQuantity.toString());
-
+  void _editQuantity(BuildContext context, String orderId, List items) {
+    // Add logic to edit quantity for items
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Edit Quantity'),
           content: TextField(
-            controller: controller,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(labelText: 'Enter new quantity'),
+            onChanged: (value) {
+              // Update logic for quantity editing
+            },
           ),
           actions: [
             TextButton(
               onPressed: () {
-                int newQuantity = int.parse(controller.text);
-                if (newQuantity > 0) {
-                  FirebaseFirestore.instance
-                      .collection('orders')
-                      .doc(orderId)
-                      .update({
-                    'quantity': newQuantity,
-                  });
+                // After editing, update the quantity in Firestore
+                FirebaseFirestore.instance
+                    .collection('orders')
+                    .doc(orderId)
+                    .update({
+                  'items': items, // Update the items field with new quantities
+                });
 
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Quantity updated')),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Quantity must be greater than 0')),
-                  );
-                }
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Quantity updated')),
+                );
               },
               child: const Text('Update'),
             ),

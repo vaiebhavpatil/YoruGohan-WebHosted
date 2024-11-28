@@ -28,15 +28,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
       // Get the current user UID
       String uid = userCredential.user!.uid;
 
-      // Add user data (including role) to Firestore
+      // Add user data (with default 'user' role) to Firestore
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
         'email': email,
         'name': name,
-        'role':
-            'user', // Default role is 'user'. You can change it to 'admin' if needed.
+        'role': 'user', // Default role is 'user'
       });
 
-      // Navigate to the login screen or home screen after sign-up
+      // Delay navigation to the login screen to ensure user creation completes first
+      await Future.delayed(
+          Duration(seconds: 1)); // Small delay to ensure data is saved
+
+      // Navigate to the login screen after sign-up
       Navigator.pushReplacementNamed(context, '/login');
     } catch (e) {
       print("Error: $e");
