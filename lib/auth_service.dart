@@ -3,7 +3,12 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  // Initialize GoogleSignIn with the client ID
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId:
+        '360774236322-79amcbsebqkae2gp2liee9rpjpnf5vbq.apps.googleusercontent.com', // Replace with your new client ID
+  );
 
   // Sign in with Google
   Future<User?> signInWithGoogle() async {
@@ -11,9 +16,14 @@ class AuthService {
       // Trigger the Google Sign-In flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
+      if (googleUser == null) {
+        // The user canceled the sign-in
+        return null;
+      }
+
       // Obtain the authentication details from the request
       final GoogleSignInAuthentication googleAuth =
-          await googleUser!.authentication;
+          await googleUser.authentication;
 
       // Create a new credential using the Google Auth token
       final OAuthCredential credential = GoogleAuthProvider.credential(

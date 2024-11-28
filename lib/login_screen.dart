@@ -27,9 +27,11 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> signIn(String email, String password) async {
     try {
       if (!_isEmailValid(email)) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Please enter a valid email."),
-        ));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Please enter a valid email."),
+          ));
+        }
         return;
       }
       UserCredential userCredential =
@@ -37,18 +39,22 @@ class _LoginScreenState extends State<LoginScreen> {
         email: email,
         password: password,
       );
-      Navigator.pushReplacementNamed(
-          context, '/order'); // Navigate to Order Screen
+      if (mounted) {
+        Navigator.pushReplacementNamed(
+            context, '/order'); // Navigate to Order Screen
+      }
     } catch (e) {
       print("Error: $e");
-      if (e is FirebaseAuthException) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Firebase error: ${e.message}"),
-        ));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("An unexpected error occurred. Please try again."),
-        ));
+      if (mounted) {
+        if (e is FirebaseAuthException) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Firebase error: ${e.message}"),
+          ));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("An unexpected error occurred. Please try again."),
+          ));
+        }
       }
     }
   }
@@ -57,15 +63,19 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> signUp(String email, String password) async {
     try {
       if (!_isEmailValid(email)) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Please enter a valid email."),
-        ));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Please enter a valid email."),
+          ));
+        }
         return;
       }
       if (password.length < 6) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Password must be at least 6 characters long."),
-        ));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Password must be at least 6 characters long."),
+          ));
+        }
         return;
       }
       UserCredential userCredential =
@@ -73,18 +83,22 @@ class _LoginScreenState extends State<LoginScreen> {
         email: email,
         password: password,
       );
-      Navigator.pushReplacementNamed(
-          context, '/order'); // Navigate to Order Screen
+      if (mounted) {
+        Navigator.pushReplacementNamed(
+            context, '/order'); // Navigate to Order Screen
+      }
     } catch (e) {
       print("Error: $e");
-      if (e is FirebaseAuthException) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Firebase error: ${e.message}"),
-        ));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("An unexpected error occurred. Please try again."),
-        ));
+      if (mounted) {
+        if (e is FirebaseAuthException) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Firebase error: ${e.message}"),
+          ));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("An unexpected error occurred. Please try again."),
+          ));
+        }
       }
     }
   }
@@ -98,18 +112,25 @@ class _LoginScreenState extends State<LoginScreen> {
 
       User? user = await AuthService().signInWithGoogle();
       if (user != null) {
-        Navigator.pushReplacementNamed(
-            context, '/order'); // Navigate to Order Screen
+        // Check if widget is still mounted before using context
+        if (mounted) {
+          Navigator.pushReplacementNamed(
+              context, '/order'); // Navigate to Order Screen
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Google sign-in failed. Please try again."),
-        ));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Google sign-in failed. Please try again."),
+          ));
+        }
       }
     } catch (e) {
       print("Error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Error signing in with Google: $e"),
-      ));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Error signing in with Google: $e"),
+        ));
+      }
     } finally {
       setState(() {
         _isGoogleSignInInProgress = false;
